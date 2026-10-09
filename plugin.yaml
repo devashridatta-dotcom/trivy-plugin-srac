@@ -1,0 +1,35 @@
+name: "srac"
+version: "0.1.0"
+repository: github.com/devashridatta-dotcom/trivy-plugin-srac
+maintainer: devashridatta-dotcom
+summary: Correlate Trivy results with externally authored SRAC assertions
+description: |-
+  Read-only correlation of saved Trivy JSON reports with Safety Relevance
+  Assertion and Context (SRAC) documents. Preserves provenance and input
+  digests and never creates or approves a safety decision.
+platforms:
+  - selector:
+      os: darwin
+      arch: amd64
+    uri: https://github.com/devashridatta-dotcom/trivy-plugin-srac/releases/download/v0.1.0/trivy-plugin-srac_0.1.0_darwin-amd64.tar.gz
+    bin: ./srac
+  - selector:
+      os: darwin
+      arch: arm64
+    uri: https://github.com/devashridatta-dotcom/trivy-plugin-srac/releases/download/v0.1.0/trivy-plugin-srac_0.1.0_darwin-arm64.tar.gz
+    bin: ./srac
+  - selector:
+      os: linux
+      arch: amd64
+    uri: https://github.com/devashridatta-dotcom/trivy-plugin-srac/releases/download/v0.1.0/trivy-plugin-srac_0.1.0_linux-amd64.tar.gz
+    bin: ./srac
+  - selector:
+      os: linux
+      arch: arm64
+    uri: https://github.com/devashridatta-dotcom/trivy-plugin-srac/releases/download/v0.1.0/trivy-plugin-srac_0.1.0_linux-arm64.tar.gz
+    bin: ./srac
+  - selector:
+      os: windows
+      arch: amd64
+    uri: https://github.com/devashridatta-dotcom/trivy-plugin-srac/releases/download/v0.1.0/trivy-plugin-srac_0.1.0_windows-amd64.zip
+    bin: ./srac.exe
