@@ -18,6 +18,7 @@ assertions.
 - Verify an expected SHA-256 digest for the SRAC input when supplied.
 - Report `matched`, `unmatched`, `ambiguous`, `invalid`, and `stale` states.
 - Preserve assertion source, evidence, review state, and input digests.
+- Produce the versioned SRAC correlation-report contract for downstream tools.
 
 ## Build
 
@@ -49,6 +50,8 @@ For local development, invoke the binary directly:
 ```bash
 ./srac correlate --trivy-report testdata/trivy-report.json \
   --srac testdata/product.srac.json --output report.json
+
+./srac validate-report --report report.json
 ```
 
 ## Correlation contract
@@ -83,7 +86,10 @@ go vet ./...
 ```
 
 See [`docs/input-contract.md`](docs/input-contract.md) for the accepted SRAC
-shape and [`testdata`](testdata) for a reproducible example.
+shape, [`docs/report-compatibility.md`](docs/report-compatibility.md) for the
+stable output contract, and [`testdata`](testdata) for reproducible and
+conformance examples. The machine-readable report schema is
+[`schemas/srac-correlation-report-1.0.schema.json`](schemas/srac-correlation-report-1.0.schema.json).
 
 ## License
 
