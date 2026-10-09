@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srac:schema:correlation-report:1",
+  "title": "SRAC Correlation Report 1.x",
+  "type": "object",
+  "required": [
+    "schema",
+    "reportVersion",
+    "generatedAt",
+    "producer",
+    "authorityBoundary",
+    "trivySchemaVersion",
+    "sracDocumentId",
+    "inputs",
+    "summary",
+    "correlations"
+  ],
+  "properties": {
+    "schema": {"const": "urn:srac:schema:correlation-report:1"},
+    "reportVersion": {"type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$"},
+    "generatedAt": {"type": "string", "format": "date-time"},
+    "producer": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}
+      },
+      "additionalProperties": true
+    },
+    "authorityBoundary": {
+      "type": "object",
+      "required": ["mode", "readOnly"],
+      "properties": {
+        "mode": {"const": "external"},
+        "readOnly": {"const": true}
+      },
+      "additionalProperties": true
+    },
+    "trivySchemaVersion": {"type": "integer", "minimum": 1},
+    "sracDocumentId": {"type": "string", "minLength": 1},
+    "inputs": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 3,
+      "items": {"$ref": "#/$defs/input"}
+    },
+    "summary": {
+      "type": "object",
+      "required": ["matched", "unmatched", "ambiguous", "invalid", "stale"],
+      "properties": {
+        "matched": {"type": "integer", "minimum": 0},
+        "unmatched": {"type": "integer", "minimum": 0},
+        "ambiguous": {"type": "integer", "minimum": 0},
+        "invalid": {"type": "integer", "minimum": 0},
+        "stale": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "correlations": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/correlation"}
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[A-Fa-f0-9]{64}$"},
+    "input": {
+      "type": "object",
+      "required": ["role", "name", "mediaType", "sha256"],
+      "properties": {
+        "role": {"enum": ["trivy-report", "srac-document", "sbom"]},
+        "name": {"type": "string", "minLength": 1, "pattern": "^[^/\\\\]+$"},
+        "mediaType": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": true
+    },
+    "finding": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "severity": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "match": {
+      "type": "object",
+      "required": ["purl"],
+      "properties": {
+        "purl": {"type": "string", "pattern": "^pkg:"},
+        "name": {"type": "string"},
+        "version": {"type": "string"},
+        "targets": {"type": "array", "items": {"type": "string"}},
+        "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}}
+      },
+      "additionalProperties": true
+    },
+    "correlationRule": {
+      "type": "object",
+      "required": ["type", "sourceField", "targetField"],
+      "properties": {
+        "type": {"enum": ["exact-purl", "bom-ref-to-purl"]},
+        "sourceField": {"type": "string", "minLength": 1},
+        "targetField": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "correlation": {
+      "type": "object",
+      "required": ["assertionId", "state"],
+      "properties": {
+        "assertionId": {"type": "string"},
+        "state": {"enum": ["matched", "unmatched", "ambiguous", "invalid", "stale"]},
+        "safetyRelevance": {"type": "string"},
+        "resolvedIdentity": {
+          "type": "object",
+          "required": ["purl"],
+          "properties": {"purl": {"type": "string", "pattern": "^pkg:"}},
+          "additionalProperties": true
+        },
+        "correlationRule": {"$ref": "#/$defs/correlationRule"},
+        "reason": {"type": "string"},
+        "rationale": {"type": "string"},
+        "sourceUri": {"type": "string"},
+        "evidence": {"type": "array", "items": {"type": "string"}},
+        "reviewStatus": {"type": "string"},
+        "matches": {"type": "array", "items": {"$ref": "#/$defs/match"}}
+      },
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "if": {"properties": {"state": {"const": "matched"}}, "required": ["state"]},
+          "then": {
+            "required": ["resolvedIdentity", "correlationRule", "matches"],
+            "properties": {"matches": {"minItems": 1, "maxItems": 1}}
+          }
+        },
+        {
+          "if": {"properties": {"state": {"const": "ambiguous"}}, "required": ["state"]},
+          "then": {
+            "required": ["resolvedIdentity", "correlationRule", "matches"],
+            "properties": {"matches": {"minItems": 2}}
+          }
+        },
+        {
+          "if": {"properties": {"state": {"enum": ["unmatched", "invalid", "stale"]}}, "required": ["state"]},
+          "then": {"properties": {"matches": {"maxItems": 0}}}
+        }
+      ]
+    }
+  }
+}

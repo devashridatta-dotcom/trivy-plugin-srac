@@ -1,0 +1,15 @@
+{
+  "schema": "urn:srac:schema:correlation-report:1",
+  "reportVersion": "1.0.0",
+  "generatedAt": "2026-10-09T12:00:00Z",
+  "producer": {"name": "trivy-plugin-srac", "version": "0.2.0"},
+  "authorityBoundary": {"mode": "external", "readOnly": true},
+  "trivySchemaVersion": 2,
+  "sracDocumentId": "urn:example:srac:stale",
+  "inputs": [
+    {"role": "trivy-report", "name": "trivy.json", "mediaType": "application/json", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"},
+    {"role": "srac-document", "name": "srac.json", "mediaType": "application/srac+json", "sha256": "1111111111111111111111111111111111111111111111111111111111111111"}
+  ],
+  "summary": {"matched": 0, "unmatched": 0, "ambiguous": 0, "invalid": 0, "stale": 1},
+  "correlations": [{"assertionId": "A-1", "state": "stale", "resolvedIdentity": {"purl": "pkg:generic/liba@1.0.0"}, "reason": "assertion validity period has expired"}]
+}
