@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "1.0",
+  "documentId": "urn:example:srac:demo",
+  "generatedAt": "2026-10-09T12:00:00Z",
+  "assertions": [
+    {
+      "id": "SRAC-001",
+      "component": {"purl": "pkg:maven/org.example/controller@1.2.3"},
+      "safetyRelevance": "safety-relevant",
+      "rationale": "Used in the braking control path.",
+      "sourceUri": "https://example.org/safety/SRAC-001",
+      "evidence": ["urn:example:evidence:test-42"],
+      "reviewStatus": "approved"
+    }
+  ]
+}

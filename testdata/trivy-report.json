@@ -1,0 +1,23 @@
+{
+  "SchemaVersion": 2,
+  "Results": [
+    {
+      "Target": "demo",
+      "Packages": [
+        {
+          "Name": "controller",
+          "Version": "1.2.3",
+          "PkgIdentifier": {"PURL": "pkg:maven/org.example/controller@1.2.3"}
+        }
+      ],
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2026-0001",
+          "PkgName": "controller",
+          "InstalledVersion": "1.2.3",
+          "Severity": "HIGH"
+        }
+      ]
+    }
+  ]
+}
