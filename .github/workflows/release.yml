@@ -1,0 +1,102 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            archive: tar.gz
+          - goos: linux
+            goarch: arm64
+            archive: tar.gz
+          - goos: darwin
+            goarch: amd64
+            archive: tar.gz
+          - goos: darwin
+            goarch: arm64
+            archive: tar.gz
+          - goos: windows
+            goarch: amd64
+            archive: zip
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: go test ./...
+      - name: Build and package
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          ARCHIVE: ${{ matrix.archive }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          mkdir -p build dist
+          binary=srac
+          if [ "$GOOS" = windows ]; then binary=srac.exe; fi
+          CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o "build/$binary" ./cmd/srac
+          package="trivy-plugin-srac_${version}_${GOOS}-${GOARCH}"
+          if [ "$ARCHIVE" = zip ]; then
+            (cd build && zip -q "../dist/${package}.zip" "$binary")
+          else
+            tar -C build -czf "dist/${package}.tar.gz" "$binary"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plugin-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: plugin-*
+          path: dist
+          merge-multiple: true
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "$TAG" --generate-notes
+
+  smoke-test:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/setup-trivy@v0.3.1
+      - name: Install published plugin
+        run: trivy plugin install github.com/devashridatta-dotcom/trivy-plugin-srac
+      - name: Correlate the published fixtures
+        run: |
+          trivy srac correlate \
+            --trivy-report testdata/trivy-report.json \
+            --srac testdata/product.srac.json \
+            --output srac-correlation-report.json
+      - name: Verify correlation report
+        run: |
+          python - <<'PY'
+          import json
+          with open("srac-correlation-report.json", encoding="utf-8") as stream:
+              report = json.load(stream)
+          assert report["summary"]["matched"] == 1, report
+          assert report["correlations"][0]["state"] == "matched", report
+          assert report["correlations"][0]["matches"][0]["findings"][0]["id"] == "CVE-2026-0001", report
+          PY
